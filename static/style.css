@@ -414,17 +414,18 @@ a:hover {
 	color: var(--accent);
 }
 
-.stats-toggle-wrap {
+.card-actions {
 	display: flex;
-	justify-content: center;
-	margin: 12px 0 28px;
+	align-items: center;
+	gap: 14px;
 }
 
 .stats-toggle {
 	display: inline-flex;
+	margin: 0;
 	align-items: center;
 	gap: 8px;
-	padding: 6px 14px;
+	padding: 5px 12px;
 	border: 1px solid var(--border);
 	border-radius: 999px;
 	background: var(--surface);
@@ -452,6 +453,8 @@ a:hover {
 .roll {
 	display: grid;
 	grid-template-rows: 0fr;
+	margin-top: 12px;
+	margin-bottom: 20px;
 	transition: grid-template-rows 0.35s ease;
 }
 

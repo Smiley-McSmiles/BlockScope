@@ -42,7 +42,6 @@
 	</div>
 </section>
 
-
 <div class="roll" id="stats-roll">
 	<div class="roll-inner">
 		<section class="stats stats-extra" aria-label="More network statistics">
@@ -94,19 +93,19 @@
 	</div>
 </div>
 
-<div class="stats-toggle-wrap">
-	<button class="stats-toggle" id="stats-toggle" type="button" aria-expanded="false" aria-controls="stats-roll">
-		<span class="toggle-label">More stats</span>
-		<span class="chev" aria-hidden="true">▾</span>
-	</button>
-</div>
 
 <p class="muted stats-note" id="stats-note" hidden></p>
 
 <section class="card fade">
 	<div class="card-head">
 		<h2>Recent blocks</h2>
-		<span class="muted">Refreshes every 30 seconds</span>
+		<div class="card-actions">
+			<button class="stats-toggle" id="stats-toggle" type="button" aria-expanded="false" aria-controls="stats-roll">
+				<span class="toggle-label">More stats</span>
+				<span class="chev" aria-hidden="true">▾</span>
+			</button>
+			<span class="muted">Refreshes every 30 seconds</span>
+		</div>
 	</div>
 	<div class="table-wrap">
 		<table class="listTable">
