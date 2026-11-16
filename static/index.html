@@ -10,20 +10,97 @@
 	</nav>
 </section>
 
-<section class="stats fade">
+<section class="stats stats-6 fade" aria-label="Network statistics">
 	<div class="stat">
-		<span class="stat-label">Hashrate</span>
-		<span class="stat-value">$hashrate</span>
+		<span class="stat-label">Block height</span>
+		<span class="stat-value" id="s-height">–</span>
+		<span class="stat-sub"><a id="s-height-link" href="/">details</a></span>
+	</div>
+	<div class="stat">
+		<span class="stat-label">Last block</span>
+		<span class="stat-value" id="s-last">–</span>
+	</div>
+	<div class="stat">
+		<span class="stat-label">Network hashrate</span>
+		<span class="stat-value" id="s-hashrate">–</span>
+		<span class="stat-sub">difficulty ÷ 120 s</span>
+	</div>
+	<div class="stat">
+		<span class="stat-label">Mempool</span>
+		<span class="stat-value" id="s-mempool">–</span>
+		<span class="stat-sub"><a href="/mempool">view all</a></span>
+	</div>
+	<div class="stat">
+		<span class="stat-label">Normal fee rate</span>
+		<span class="stat-value" id="s-fee">–</span>
+		<span class="stat-sub">pXMR/B · fee estimate</span>
 	</div>
 	<div class="stat">
 		<span class="stat-label">Difficulty</span>
-		<span class="stat-value">$diff</span>
-	</div>
-	<div class="stat">
-		<span class="stat-label">All-time transactions</span>
-		<span class="stat-value">$txnr</span>
+		<span class="stat-value" id="s-difficulty">–</span>
+		<span class="stat-sub mono" id="s-difficulty-exact"></span>
 	</div>
 </section>
+
+<div class="stats-toggle-wrap">
+	<button class="stats-toggle" id="stats-toggle" type="button" aria-expanded="false" aria-controls="stats-roll">
+		<span class="toggle-label">More stats</span>
+		<span class="chev" aria-hidden="true">▾</span>
+	</button>
+</div>
+
+<div class="roll" id="stats-roll">
+	<div class="roll-inner">
+		<section class="stats stats-extra" aria-label="More network statistics">
+			<div class="stat">
+				<span class="stat-label">All-time transactions</span>
+				<span class="stat-value" id="x-txs">–</span>
+			</div>
+			<div class="stat">
+				<span class="stat-label">Average block time</span>
+				<span class="stat-value" id="x-blocktime">–</span>
+				<span class="stat-sub" id="x-sample">–</span>
+			</div>
+			<div class="stat">
+				<span class="stat-label">Average txs per block</span>
+				<span class="stat-value" id="x-txsblock">–</span>
+			</div>
+			<div class="stat">
+				<span class="stat-label">Average block size</span>
+				<span class="stat-value" id="x-avgsize">–</span>
+			</div>
+			<div class="stat">
+				<span class="stat-label">Median block size</span>
+				<span class="stat-value" id="x-median">–</span>
+				<span class="stat-sub" id="x-limit"></span>
+			</div>
+			<div class="stat">
+				<span class="stat-label">Last block reward</span>
+				<span class="stat-value" id="x-reward">–</span>
+			</div>
+			<div class="stat">
+				<span class="stat-label">Mempool size</span>
+				<span class="stat-value" id="x-mempool-size">–</span>
+			</div>
+			<div class="stat">
+				<span class="stat-label">Mempool fees</span>
+				<span class="stat-value" id="x-mempool-fees">–</span>
+			</div>
+			<div class="stat">
+				<span class="stat-label">Peers</span>
+				<span class="stat-value" id="x-peers">–</span>
+				<span class="stat-sub" id="x-peers-sub"></span>
+			</div>
+			<div class="stat">
+				<span class="stat-label">Node</span>
+				<span class="stat-value" id="x-node">–</span>
+				<span class="stat-sub" id="x-version"></span>
+			</div>
+		</section>
+	</div>
+</div>
+
+<p class="muted stats-note" id="stats-note" hidden></p>
 
 <section class="card fade">
 	<div class="card-head">
@@ -43,5 +120,102 @@
 </section>
 
 <script>
-	setTimeout(function () { location.reload(); }, 30000);
+	(function () {
+		var EXPAND_KEY = 'stats-expanded';
+		var $ = function (id) { return document.getElementById(id); };
+
+		function scaled(value, units) {
+			var v = Number(value);
+			var i = 0;
+			while (v >= 1000 && i < units.length - 1) { v /= 1000; i++; }
+			return v.toFixed(2) + ' ' + units[i];
+		}
+
+		function ago(unix) {
+			if (!unix) return '–';
+			var s = Math.max(0, Math.floor(Date.now() / 1000) - unix);
+			if (s < 60) return s + ' s ago';
+			if (s < 3600) return Math.floor(s / 60) + ' min ago';
+			if (s < 86400) return Math.floor(s / 3600) + ' h ago';
+			return Math.floor(s / 86400) + ' d ago';
+		}
+
+		function duration(seconds) {
+			if (!seconds) return '–';
+			var m = Math.floor(seconds / 60);
+			var s = Math.round(seconds % 60);
+			return m + 'm ' + String(s).padStart(2, '0') + 's';
+		}
+
+		function xmr(piconero, decimals) {
+			return (Number(piconero) / 1e12).toFixed(decimals);
+		}
+
+		function kB(bytes) {
+			return (Number(bytes) / 1000).toFixed(1) + ' kB';
+		}
+
+		function render(d) {
+			$('s-height').textContent = d.height.toLocaleString('en-US');
+			$('s-height-link').href = '/block?id=' + (d.height - 1);
+			$('s-last').textContent = ago(d.last_block_time);
+			$('s-hashrate').textContent = scaled(d.hashrate, ['H/s', 'kH/s', 'MH/s', 'GH/s', 'TH/s', 'PH/s']);
+			$('s-mempool').textContent = d.mempool_count.toLocaleString('en-US') + ' txs';
+			$('s-fee').textContent = d.fee_rate.toLocaleString('en-US');
+			$('s-difficulty').textContent = scaled(d.difficulty, ['', 'k', 'M', 'G', 'T', 'P']);
+			$('s-difficulty-exact').textContent = d.difficulty.toLocaleString('en-US');
+
+			$('x-txs').textContent = d.tx_count.toLocaleString('en-US');
+			$('x-blocktime').textContent = duration(d.avg_block_time);
+			$('x-sample').textContent = 'over last ' + d.sample_blocks + ' blocks';
+			$('x-txsblock').textContent = d.avg_txs_per_block.toFixed(1);
+			$('x-avgsize').textContent = kB(d.avg_block_size);
+			$('x-median').textContent = kB(d.median_block_size);
+			$('x-limit').textContent = 'limit ' + kB(d.block_size_limit);
+			$('x-reward').textContent = xmr(d.last_block_reward, 6) + ' XMR';
+			$('x-mempool-size').textContent = kB(d.mempool_bytes);
+			$('x-mempool-fees').textContent = xmr(d.mempool_fees, 6) + ' XMR';
+			$('x-peers').textContent = d.outgoing_peers + ' out';
+			$('x-peers-sub').textContent = d.incoming_peers + ' in';
+			$('x-node').textContent = d.synchronized ? 'Synced' : 'Syncing';
+			$('x-version').textContent = d.version;
+		}
+
+		function showError(message) {
+			var note = $('stats-note');
+			note.hidden = false;
+			note.textContent = message;
+		}
+
+		var roll = $('stats-roll');
+		var toggle = $('stats-toggle');
+		function setOpen(open) {
+			roll.classList.toggle('open', open);
+			toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+			toggle.querySelector('.toggle-label').textContent = open ? 'Fewer stats' : 'More stats';
+		}
+		setOpen(localStorage.getItem(EXPAND_KEY) === '1');
+		toggle.addEventListener('click', function () {
+			var open = !roll.classList.contains('open');
+			setOpen(open);
+			try { localStorage.setItem(EXPAND_KEY, open ? '1' : '0'); } catch (e) {}
+		});
+
+		fetch('/api/stats', { cache: 'no-store' })
+			.then(function (r) {
+				return r.json().then(function (d) { return { ok: r.ok, data: d }; });
+			})
+			.then(function (res) {
+				if (!res.ok) {
+					showError(res.data.error || 'Could not load network statistics.');
+					return;
+				}
+				render(res.data);
+			})
+			.catch(function () {
+				showError('Could not reach the server.');
+			});
+
+		setTimeout(function () { location.reload(); }, 30000);
+	})();
 </script>

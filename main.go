@@ -103,12 +103,7 @@ func main() {
 			blocksList = "<tr class=\"tr\"><td>" + strconv.FormatUint(e.Height, 10) + "</td><td>" + strconv.FormatUint(uint64(e.NumTxes), 10) + "</td><td><a class=\"monos\" href=\"/block?id=" + e.Hash + "\">" + e.Hash + "</a></td><td>" + FormatTimeAgo(time.Now().Unix()-e.Timestamp) + "</td></tr>" + blocksList
 		}
 
-		info := GetInfo()
 		pageOut := strings.Replace(MainPage, "$blocks", blocksList, 1)
-
-		pageOut = strings.Replace(pageOut, "$diff", strconv.FormatUint(info.Difficulty/1000/1000, 10)+" M", 1)
-		pageOut = strings.Replace(pageOut, "$txnr", strconv.FormatUint(info.TxCount/1000, 10)+"k", 1)
-		pageOut = strings.Replace(pageOut, "$hashrate", strconv.FormatUint(info.Difficulty/1000/1000/uint64(BlockTime), 10)+" MH/s", 1)
 
 		res.Header().Set("Content-Type", "text/html")
 		res.Write([]byte(pageOut))
@@ -231,6 +226,7 @@ func main() {
 	http.HandleFunc("/api/decode-outputs", HandleDecodeOutputs)
 	http.HandleFunc("/api/prove-sending", HandleProveSending)
 	http.HandleFunc("/api/mempool", HandleMempool)
+	http.HandleFunc("/api/stats", HandleStats)
 	http.HandleFunc("/mempool", func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Set("Content-Type", "text/html")
 		res.Write([]byte(MempoolPage))

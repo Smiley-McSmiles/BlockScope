@@ -39,7 +39,7 @@ BlockScope reads everything directly from your own `monerod` node, so you don't 
 
 ## Features
 
-- **Network overview:** hashrate, difficulty, all-time transaction count and the most recent blocks, refreshed automatically.
+- **Network overview:** block height, last block age, hashrate, difficulty, mempool, fee rate and the most recent blocks. A "More stats" arrow reveals average block time, transactions and block size, the last block reward, mempool size and fees, peer counts and node status.
 - **Block pages:** block details, reward, size and every transaction in the block, with previous and next block navigation.
 - **Transaction pages:** confirmation status, block height, timestamp, size and double-spend detection.
 - **Mempool:** unconfirmed transactions sorted by fee rate, with totals and a live search by transaction ID.
