@@ -1,4 +1,5 @@
 // Copyright (c) 2022, duggavo
+// Copyright (c) 2026, WOOSAH
 //
 // All rights reserved.
 //
@@ -51,15 +52,16 @@ var listenAddress, ProxyToUse, DaemonUrl, RpcLogin string
 var RpcPassword, RpcUsername string
 
 func main() {
-	fmt.Println("\x1b[1m" + `
-         __          ___  __    __    __        __     __
-|\  /|  /  \  |\  | |    |  \  /  \  |  \ |    /  \   /   | /
-| \/ | |    | | \ | |___ |__/ |    | |__/ |   |    | |    |/
-|    | |    | |  \| |    | \  |    | |  \ |   |    | |    |\
-|    |  \__/  |   | |___ |  \  \__/  |__/ |__  \__/   \__ | \
+	fmt.Println("\x1b[1m\x1b[32m" + `
+  ____  _            _      ____
+ | __ )| | ___   ___| | __ / ___|  ___ ___  _ __   ___
+ |  _ \| |/ _ \ / __| |/ / \___ \ / __/ _ \| '_ \ / _ \
+ | |_) | | (_) | (__|   <   ___) | (_| (_) | |_) |  __/
+ |____/|_|\___/ \___|_|\_\ |____/ \___\___/| .__/ \___|
+                                           |_|
 
                  The Trustless Block Explorer` + "\x1b[0m")
-	fmt.Println("\n\nStarting MoneroBlock v" + Version)
+	fmt.Println("\n\nStarting BlockScope v" + Version)
 
 	flag.StringVar(&listenAddress, "bind", "127.0.0.1:31312", "Address and port to bind.")
 	flag.StringVar(&ProxyToUse, "proxy", "none", "Proxy to use. Should start with socks5://, socks4:// or http:// .")
@@ -89,6 +91,10 @@ func main() {
 		res.Header().Set("Content-Type", "text/css")
 		res.Write(StyleSheetPage)
 
+	})
+	http.HandleFunc("/logo.svg", func(res http.ResponseWriter, req *http.Request) {
+		res.Header().Set("Content-Type", "image/svg+xml")
+		res.Write(LogoSVG)
 	})
 	http.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
 		var blocksList string
@@ -220,6 +226,14 @@ func main() {
 		o = strings.Replace(o, "$txList", txList, 1)
 
 		res.Write([]byte(o))
+	})
+
+	http.HandleFunc("/api/decode-outputs", HandleDecodeOutputs)
+	http.HandleFunc("/api/prove-sending", HandleProveSending)
+	http.HandleFunc("/api/mempool", HandleMempool)
+	http.HandleFunc("/mempool", func(res http.ResponseWriter, req *http.Request) {
+		res.Header().Set("Content-Type", "text/html")
+		res.Write([]byte(MempoolPage))
 	})
 
 	srv := &http.Server{

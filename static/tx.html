@@ -1,25 +1,266 @@
-<div class="w_700px">
-	<h2>Transaction <span style="font-size:14px;">$txid</span></h2>
-	<table>
-		<tr>
-			<td style="width:140px">Confirmations</td>
-			<td>$confirmations</td>
-		</tr>
-		<tr>
-			<td>Included in block</td>
-			<td><a href="/block?id=$height">$height</a></td>
-		</tr>
-		<tr>
-			<td>Date and time</td>
-			<td>$timestamp</td>
-		</tr>
-		<tr>
-			<td>Size</td>
-			<td>$size kB</td>
-		</tr>
-		<tr>
-			<td>Double-spend</td>
-			<td>$doublespend</td>
-		</tr>
-	</table>
-</div>
+<section class="page-head fade">
+	<div>
+		<span class="eyebrow">Transaction</span>
+		<h1 class="page-title mono" id="txid">$txid</h1>
+	</div>
+	<button class="btn-ghost" type="button" data-copy="txid">Copy ID</button>
+</section>
+
+<nav class="tabs fade" role="tablist">
+	<button class="tab active" type="button" role="tab" aria-selected="true" data-tab="decode">Decode outputs</button>
+	<button class="tab" type="button" role="tab" aria-selected="false" data-tab="prove">Prove sending</button>
+</nav>
+
+<section class="card tool-panel fade" id="panel-decode" role="tabpanel">
+	<h2>Decode outputs</h2>
+	<p class="tool-desc">Check which outputs belong to a given Monero address/subaddress and viewkey. For RingCT transactions, outputs' amounts are also decoded.</p>
+	<p class="tool-note">Note: address/subaddress and viewkey are sent to the server, as the calculations are done on the server side.</p>
+	<form class="tool-form" id="decode-form" autocomplete="off">
+		<label class="field">
+			<span>Monero address/subaddress</span>
+			<input name="address" type="text" required spellcheck="false" placeholder="Monero address/subaddress">
+		</label>
+		<label class="field">
+			<span>Private viewkey</span>
+			<input name="viewkey" type="password" required spellcheck="false" placeholder="Private viewkey">
+		</label>
+		<div class="tool-actions">
+			<button class="btn" type="submit">Decode outputs</button>
+		</div>
+	</form>
+	<div class="tool-result" id="decode-result" hidden></div>
+</section>
+
+<section class="card tool-panel fade" id="panel-prove" role="tabpanel" hidden>
+	<h2>Prove sending</h2>
+	<p class="tool-desc">Prove to someone that you have sent them Monero in this transaction.</p>
+	<p class="tool-note">Tx private key can be obtained using <code>get_tx_key</code> command in <em>monero-wallet-cli</em> command line tool. Note: address/subaddress and tx private key are sent to the server, as the calculations are done on the server side.</p>
+	<form class="tool-form" id="prove-form" autocomplete="off">
+		<label class="field">
+			<span>Tx private key</span>
+			<input name="txkey" type="password" required spellcheck="false" placeholder="Tx private key">
+		</label>
+		<label class="field">
+			<span>Recipient's Monero address/subaddress</span>
+			<input name="address" type="text" required spellcheck="false" placeholder="Recipient's Monero address/subaddress">
+		</label>
+		<div class="tool-actions">
+			<button class="btn" type="submit">Prove sending</button>
+		</div>
+	</form>
+	<div class="tool-result" id="prove-result" hidden></div>
+</section>
+
+<section class="card kv fade">
+	<div class="row">
+		<span class="k">Status</span>
+		<span class="v" id="status"></span>
+	</div>
+	<div class="row">
+		<span class="k">Confirmations</span>
+		<span class="v" id="confirmations">$confirmations</span>
+	</div>
+	<div class="row">
+		<span class="k">Included in block</span>
+		<span class="v" id="block-cell"><a href="/block?id=$height">$height</a></span>
+	</div>
+	<div class="row">
+		<span class="k">Date and time</span>
+		<span class="v" id="timestamp">$timestamp</span>
+	</div>
+	<div class="row">
+		<span class="k">Size</span>
+		<span class="v">$size kB</span>
+	</div>
+	<div class="row">
+		<span class="k">Double-spend seen</span>
+		<span class="v" id="doublespend">$doublespend</span>
+	</div>
+</section>
+
+<script>
+	(function () {
+		var confirmations = parseInt(document.getElementById('confirmations').textContent, 10);
+		var pending = !(confirmations > 0);
+
+		document.getElementById('status').innerHTML = pending
+			? '<span class="badge warn">Unconfirmed</span>'
+			: '<span class="badge">Confirmed</span>';
+
+		if (pending) {
+			document.getElementById('block-cell').textContent = 'Not mined yet';
+		}
+
+		var ds = document.getElementById('doublespend');
+		var seen = ds.textContent.trim() === 'true';
+		ds.innerHTML = seen ? '<span class="badge bad">Yes</span>' : 'No';
+
+		var ts = document.getElementById('timestamp');
+		if (ts.textContent.indexOf('1970') === 0) {
+			ts.textContent = '—';
+		}
+	})();
+</script>
+
+<script>
+	(function () {
+		var txid = document.getElementById('txid').textContent.trim();
+
+		var tabs = document.querySelectorAll('.tab');
+		tabs.forEach(function (tab) {
+			tab.addEventListener('click', function () {
+				tabs.forEach(function (t) {
+					var on = t === tab;
+					t.classList.toggle('active', on);
+					t.setAttribute('aria-selected', on ? 'true' : 'false');
+				});
+				document.querySelectorAll('.tool-panel').forEach(function (p) {
+					p.hidden = p.id !== 'panel-' + tab.getAttribute('data-tab');
+				});
+			});
+		});
+
+		function el(tag, cls, text) {
+			var node = document.createElement(tag);
+			if (cls) node.className = cls;
+			if (text !== undefined && text !== null) node.textContent = text;
+			return node;
+		}
+
+		function fmtXMR(piconero) {
+			if (piconero === null || piconero === undefined) return '?';
+			var n = BigInt(piconero);
+			var base = BigInt('1000000000000');
+			var whole = (n / base).toString();
+			var frac = (n % base).toString().padStart(12, '0').replace(/0+$/, '');
+			return whole + (frac ? '.' + frac : '') + ' XMR';
+		}
+
+		function notice(container, kind, text) {
+			container.hidden = false;
+			container.innerHTML = '';
+			container.appendChild(el('div', 'notice ' + kind, text));
+		}
+
+		function post(url, body) {
+			return fetch(url, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(body),
+				cache: 'no-store'
+			}).then(function (r) {
+				return r.json().catch(function () { return {}; }).then(function (data) {
+					return { ok: r.ok, data: data };
+				});
+			});
+		}
+
+		function outputsTable(outputs, onlyMine) {
+			var wrap = el('div', 'table-wrap');
+			var table = el('table', 'listTable');
+			var head = el('tr', 'tr');
+			['Output', 'Stealth address', 'Amount', ''].forEach(function (h) {
+				head.appendChild(el('th', null, h));
+			});
+			table.appendChild(head);
+			outputs.forEach(function (o) {
+				if (onlyMine && !o.mine) return;
+				var row = el('tr', 'tr');
+				row.appendChild(el('td', null, String(o.index)));
+				row.appendChild(el('td', 'mono wrap', o.stealth_address));
+				var amount = el('td', null, o.amount === null ? '?' : fmtXMR(o.amount));
+				if (o.amount !== null && !o.amount_verified) {
+					amount.appendChild(el('div', 'muted', 'unverified'));
+				}
+				row.appendChild(amount);
+				var mark = el('td');
+				if (o.mine) mark.appendChild(el('span', 'badge', 'Yours'));
+				row.appendChild(mark);
+				table.appendChild(row);
+			});
+			wrap.appendChild(table);
+			return wrap;
+		}
+
+		function renderDecode(container, data) {
+			container.hidden = false;
+			container.innerHTML = '';
+			var kind = data.matched_count > 0 ? 'ok' : 'warn';
+			var target = data.subaddress ? 'subaddress' : 'address';
+			var text = data.matched_count > 0
+				? data.matched_count + ' of ' + data.outputs.length + ' output(s) belong to this ' + target +
+				  ' · total ' + fmtXMR(data.total)
+				: 'No outputs in this transaction belong to the given ' + target + ' and viewkey.';
+			container.appendChild(el('div', 'notice ' + kind, text));
+			container.appendChild(outputsTable(data.outputs, false));
+		}
+
+		function renderProve(container, data) {
+			container.hidden = false;
+			container.innerHTML = '';
+			var kind, text;
+			if (data.matched_count > 0 && data.key_matches_tx) {
+				kind = 'ok';
+				text = 'Proven: this transaction sent ' + fmtXMR(data.total) + ' to this ' +
+					(data.subaddress ? 'subaddress' : 'address') + ' in ' + data.matched_count + ' output(s).';
+			} else if (data.matched_count > 0) {
+				kind = 'warn';
+				text = 'Outputs match, but the tx key does not match this transaction\'s public key. Check the key.';
+			} else {
+				kind = 'bad';
+				text = 'No outputs in this transaction were sent to this address with the given tx key.';
+			}
+			container.appendChild(el('div', 'notice ' + kind, text));
+			if (data.matched_count > 0) {
+				container.appendChild(outputsTable(data.outputs, true));
+			}
+		}
+
+		function submitTool(form, url, resultId, buildBody, render, secretField) {
+			form.addEventListener('submit', function (e) {
+				e.preventDefault();
+				var btn = form.querySelector('button[type=submit]');
+				var result = document.getElementById(resultId);
+				btn.disabled = true;
+				notice(result, 'info', 'Working…');
+				post(url, buildBody(form, txid))
+					.then(function (res) {
+						if (!res.ok) {
+							notice(result, 'bad', res.data.error || 'Request failed.');
+						} else {
+							render(result, res.data);
+						}
+					})
+					.catch(function () {
+						notice(result, 'bad', 'Could not reach the server.');
+					})
+					.then(function () {
+						btn.disabled = false;
+						form[secretField].value = '';
+					});
+			});
+		}
+
+		submitTool(
+			document.getElementById('decode-form'),
+			'/api/decode-outputs',
+			'decode-result',
+			function (f, id) {
+				return { txid: id, address: f.address.value.trim(), viewkey: f.viewkey.value.trim() };
+			},
+			renderDecode,
+			'viewkey'
+		);
+
+		submitTool(
+			document.getElementById('prove-form'),
+			'/api/prove-sending',
+			'prove-result',
+			function (f, id) {
+				return { txid: id, address: f.address.value.trim(), txkey: f.txkey.value.trim() };
+			},
+			renderProve,
+			'txkey'
+		);
+	})();
+</script>

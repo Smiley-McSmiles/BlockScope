@@ -1,4 +1,5 @@
 // Copyright (c) 2022, duggavo
+// Copyright (c) 2026, WOOSAH
 //
 // All rights reserved.
 //
@@ -30,7 +31,70 @@ package main
 
 import _ "embed"
 
-var Footer string = `</div></body></html>`
+var Footer string = `
+	<footer class="footer">BlockScope · the trustless block explorer · self-hosted</footer>
+	</div>
+	<script>
+		(function () {
+			var root = document.documentElement;
+
+			document.getElementById('theme-toggle').addEventListener('click', function () {
+				var light = root.getAttribute('data-theme') !== 'light';
+				if (light) {
+					root.setAttribute('data-theme', 'light');
+				} else {
+					root.removeAttribute('data-theme');
+				}
+				try { localStorage.setItem('theme', light ? 'light' : 'dark'); } catch (e) {}
+			});
+
+			document.addEventListener('keydown', function (e) {
+				var tag = (e.target.tagName || '').toLowerCase();
+				if (e.key === '/' && tag !== 'input' && tag !== 'textarea') {
+					e.preventDefault();
+					document.getElementById('search').focus();
+				}
+			});
+
+			function copyText(text) {
+				if (navigator.clipboard && window.isSecureContext) {
+					return navigator.clipboard.writeText(text);
+				}
+				return new Promise(function (resolve, reject) {
+					var ta = document.createElement('textarea');
+					ta.value = text;
+					ta.setAttribute('readonly', '');
+					ta.style.position = 'fixed';
+					ta.style.opacity = '0';
+					document.body.appendChild(ta);
+					ta.select();
+					var ok = false;
+					try { ok = document.execCommand('copy'); } catch (e) {}
+					document.body.removeChild(ta);
+					ok ? resolve() : reject();
+				});
+			}
+
+			function flash(btn, label, message) {
+				btn.textContent = message;
+				setTimeout(function () { btn.textContent = label; }, 1500);
+			}
+
+			document.querySelectorAll('[data-copy]').forEach(function (btn) {
+				btn.setAttribute('data-label', btn.textContent);
+				btn.addEventListener('click', function () {
+					var text = document.getElementById(btn.getAttribute('data-copy')).textContent.trim();
+					var label = btn.getAttribute('data-label') || btn.textContent;
+					copyText(text).then(function () {
+						flash(btn, label, 'Copied');
+					}, function () {
+						flash(btn, label, 'Copy failed');
+					});
+				});
+			});
+		})();
+	</script>
+</body></html>`
 
 //go:embed static/header.html
 var Header string
@@ -44,12 +108,21 @@ var TxPage string
 //go:embed static/block.html
 var BlockPage string
 
+//go:embed static/mempool.html
+var mempoolTemplate string
+
+var MempoolPage string
+
 //go:embed static/style.css
 var StyleSheetPage []byte
+
+//go:embed static/logo.svg
+var LogoSVG []byte
 
 func InitPages() {
 	MainPage = Header + MainPage + Footer
 	TxPage = Header + TxPage + Footer
 	BlockPage = Header + BlockPage + Footer
+	MempoolPage = Header + mempoolTemplate + Footer
 
 }

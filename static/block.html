@@ -1,40 +1,69 @@
-<div class="w_700px">
-	<h2>Block $blocknum</h2>
-	<table>
-		<tr>
-			<td style="width:140px">Block hash</td>
-			<td>$hash</td>
-		</tr>
-		<tr>
-			<td>Transactions</td>
-			<td>$numtxes</td>
-		</tr>
-		<tr>
-			<td>Date and time</td>
-			<td>$timestamp</td>
-		</tr>
-		<tr>
-			<td>Size</td>
-			<td>$size kB</td>
-		</tr>
-		<tr>
-			<td>Difficulty</td>
-			<td>$diff M</td>
-		</tr>
-		<tr>
-			<td>Reward</td>
-			<td>$reward</td>
-		</tr>
-		<tr>
-			<td>Coinbase tx</td>
-			<td><a href="/tx?id=$minerTx">$minerTx</a></td>
-		</tr>
-	</table>
-	<table class="listTable">
-		<tr class="tr">
-			<th class="th1" style="width:50px"></th>
-			<th class="th2">Transactions in this block</th>
-		</tr>$txList
+<section class="page-head fade">
+	<div>
+		<span class="eyebrow">Block</span>
+		<h1 class="page-title">Block <span class="mono accent" id="blocknum">$blocknum</span></h1>
+	</div>
+	<div class="pager">
+		<a class="btn-ghost" id="prev" href="#">← Previous</a>
+		<a class="btn-ghost" id="next" href="#">Next →</a>
+	</div>
+</section>
 
-	</table>
-</div>
+<section class="card kv fade">
+	<div class="row">
+		<span class="k">Block hash</span>
+		<span class="v">
+			<span class="mono" id="hash">$hash</span>
+			<button class="btn-ghost" type="button" data-copy="hash">Copy</button>
+		</span>
+	</div>
+	<div class="row">
+		<span class="k">Transactions</span>
+		<span class="v">$numtxes</span>
+	</div>
+	<div class="row">
+		<span class="k">Date and time</span>
+		<span class="v">$timestamp</span>
+	</div>
+	<div class="row">
+		<span class="k">Size</span>
+		<span class="v">$size kB</span>
+	</div>
+	<div class="row">
+		<span class="k">Difficulty</span>
+		<span class="v">$diff M</span>
+	</div>
+	<div class="row">
+		<span class="k">Reward</span>
+		<span class="v">$reward XMR</span>
+	</div>
+	<div class="row">
+		<span class="k">Coinbase tx</span>
+		<span class="v"><a class="mono" href="/tx?id=$minerTx">$minerTx</a></span>
+	</div>
+</section>
+
+<section class="card fade">
+	<div class="card-head">
+		<h2>Transactions in this block</h2>
+	</div>
+	<div class="table-wrap">
+		<table class="listTable">
+			<tr class="tr">
+				<th>#</th>
+				<th>Transaction</th>
+			</tr>$txList
+		</table>
+	</div>
+</section>
+
+<script>
+	(function () {
+		var num = parseInt(document.getElementById('blocknum').textContent, 10);
+		document.getElementById('prev').href = '/block?id=' + (num - 1);
+		document.getElementById('next').href = '/block?id=' + (num + 1);
+		if (num <= 0) {
+			document.getElementById('prev').style.display = 'none';
+		}
+	})();
+</script>

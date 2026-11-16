@@ -1,0 +1,182 @@
+<section class="hero fade">
+	<div class="hero-text">
+		<span class="live"><span class="dot"></span>Live from our own full node</span>
+		<h1 class="page-title">Monero <span class="accent">mempool</span>: <span id="count">…</span> unconfirmed transactions</h1>
+		<p class="page-subtitle">Every Monero transaction waiting to be mined, live from our own full node and sorted by fee rate.</p>
+	</div>
+	<nav class="tabs">
+		<a class="tab" href="/">Blocks</a>
+		<a class="tab active" href="/mempool">Mempool</a>
+	</nav>
+</section>
+
+<section class="stats stats-4 fade">
+	<div class="stat">
+		<span class="stat-label">Transactions</span>
+		<span class="stat-value" id="stat-count">–</span>
+	</div>
+	<div class="stat">
+		<span class="stat-label">Total size</span>
+		<span class="stat-value" id="stat-size">–</span>
+	</div>
+	<div class="stat">
+		<span class="stat-label">Total fees</span>
+		<span class="stat-value" id="stat-fees">–</span>
+	</div>
+	<div class="stat">
+		<span class="stat-label">Oldest waiting</span>
+		<span class="stat-value" id="stat-oldest">–</span>
+	</div>
+</section>
+
+<form class="search-form mempool-search fade" id="mempool-search" autocomplete="off">
+	<div class="search-field">
+		<input id="filter" class="search" type="text" placeholder="Search a transaction ID" spellcheck="false">
+		<kbd class="kbd">/</kbd>
+	</div>
+	<button class="btn" type="submit">Search</button>
+</form>
+
+<div class="tool-result" id="mempool-status" hidden></div>
+
+<section class="card fade">
+	<div class="table-wrap">
+		<table class="listTable">
+			<thead>
+				<tr class="tr">
+					<th>Transaction ID</th>
+					<th>Received</th>
+					<th class="num">Fee (XMR)</th>
+					<th class="num">Size</th>
+					<th class="num">Fee rate (piconero/byte)</th>
+				</tr>
+			</thead>
+			<tbody id="rows"></tbody>
+		</table>
+	</div>
+	<p class="muted" id="row-note" hidden></p>
+</section>
+
+<script>
+	(function () {
+		var MAX_ROWS = 300;
+		var HEX64 = /^[0-9a-f]{64}$/;
+		var state = { txs: [], query: '' };
+
+		var $ = function (id) { return document.getElementById(id); };
+
+		function el(tag, cls, text) {
+			var node = document.createElement(tag);
+			if (cls) node.className = cls;
+			if (text !== undefined && text !== null) node.textContent = text;
+			return node;
+		}
+
+		function ago(unix) {
+			if (!unix) return '–';
+			var s = Math.max(0, Math.floor(Date.now() / 1000) - unix);
+			if (s < 60) return s + ' s ago';
+			if (s < 3600) return Math.floor(s / 60) + ' min ago';
+			if (s < 86400) return Math.floor(s / 3600) + ' h ago';
+			return Math.floor(s / 86400) + ' d ago';
+		}
+
+		function xmr(piconero, decimals) {
+			return (Number(piconero) / 1e12).toFixed(decimals);
+		}
+
+		function kB(bytes) {
+			return (bytes / 1000).toFixed(2) + ' kB';
+		}
+
+		function notice(text) {
+			var box = $('mempool-status');
+			box.hidden = false;
+			box.innerHTML = '';
+			box.appendChild(el('div', 'notice bad', text));
+		}
+
+		function renderRows() {
+			var q = state.query.toLowerCase();
+			var matches = state.txs.filter(function (t) {
+				return !q || t.id.indexOf(q) !== -1;
+			});
+			var body = $('rows');
+			body.innerHTML = '';
+			matches.slice(0, MAX_ROWS).forEach(function (t) {
+				var row = el('tr', 'tr');
+				var idCell = el('td');
+				var link = el('a', 'monos', t.id.slice(0, 8) + '…' + t.id.slice(-8));
+				link.href = '/tx?id=' + t.id;
+				link.title = t.id;
+				idCell.appendChild(link);
+				if (t.double_spend_seen) idCell.appendChild(el('span', 'badge bad', 'double-spend'));
+				row.appendChild(idCell);
+				row.appendChild(el('td', null, ago(t.received)));
+				row.appendChild(el('td', 'num', xmr(t.fee, 8)));
+				row.appendChild(el('td', 'num', kB(t.size)));
+				row.appendChild(el('td', 'num', t.fee_rate.toLocaleString('en-US')));
+				body.appendChild(row);
+			});
+
+			var note = $('row-note');
+			if (matches.length === 0) {
+				note.hidden = false;
+				note.textContent = q ? 'No unconfirmed transaction matches that ID.' : 'The mempool is empty.';
+			} else if (matches.length > MAX_ROWS) {
+				note.hidden = false;
+				note.textContent = 'Showing the top ' + MAX_ROWS + ' of ' + matches.length + ' transactions. Search for an ID to find others.';
+			} else {
+				note.hidden = true;
+			}
+		}
+
+		function renderSummary(data) {
+			var n = data.count;
+			$('count').textContent = n.toLocaleString('en-US');
+			$('stat-count').textContent = n.toLocaleString('en-US');
+			$('stat-size').textContent = kB(data.total_size);
+			$('stat-fees').textContent = xmr(data.total_fees, 6) + ' XMR';
+			$('stat-oldest').textContent = data.oldest ? ago(data.oldest) : '–';
+		}
+
+		function refresh() {
+			fetch('/api/mempool', { cache: 'no-store' })
+				.then(function (r) {
+					return r.json().then(function (d) { return { ok: r.ok, data: d }; });
+				})
+				.then(function (res) {
+					if (!res.ok) {
+						notice(res.data.error || 'Could not load the mempool.');
+						return;
+					}
+					$('mempool-status').hidden = true;
+					state.txs = res.data.transactions;
+					renderSummary(res.data);
+					renderRows();
+				})
+				.catch(function () {
+					notice('Could not reach the server.');
+				})
+				.then(function () {
+					setTimeout(refresh, 10000);
+				});
+		}
+
+		var form = $('mempool-search');
+		var filter = $('filter');
+		filter.addEventListener('input', function () {
+			state.query = filter.value.trim();
+			renderRows();
+		});
+		form.addEventListener('submit', function (e) {
+			var v = filter.value.trim().toLowerCase();
+			if (HEX64.test(v)) {
+				e.preventDefault();
+				window.location.href = '/tx?id=' + v;
+			}
+		});
+
+		refresh();
+	})();
+</script>

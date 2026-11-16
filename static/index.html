@@ -1,37 +1,47 @@
-<div class="w_700px">
-	<h2>Network stats</h2>
-	<table style="width: 100%;">
-		<tr>
-			<td>
-				<div class="stat-box">Hashrate
-					<div>
-						$hashrate
-					</div>
-				</div>
-			</td>
-			<td>
-				<div class="stat-box">Difficulty
-					<div>
-						$diff
-					</div>
-				</div>
-			</td>
-			<td>
-				<div class="stat-box">All-time transactions
-					<div>
-						$txnr
-					</div>
-				</div>
-			</td>
-		</tr>
-	</table>
-	<h2>Recent blocks</h2>
-	<table class="listTable">
-		<tr class="tr">
-			<th class="th1">Height</th>
-			<th>Txs</th>
-			<th>Block Hash</th>
-			<th class="th2">Age</th>
-		</tr>$blocks
-	</table>
-</div>
+<section class="hero fade">
+	<div class="hero-text">
+		<span class="live"><span class="dot"></span>Live from our own full node</span>
+		<h1 class="page-title">Monero <span class="accent">network</span></h1>
+		<p class="page-subtitle">Network statistics and the latest blocks, read directly from the chain.</p>
+	</div>
+	<nav class="tabs">
+		<a class="tab active" href="/">Blocks</a>
+		<a class="tab" href="/mempool">Mempool</a>
+	</nav>
+</section>
+
+<section class="stats fade">
+	<div class="stat">
+		<span class="stat-label">Hashrate</span>
+		<span class="stat-value">$hashrate</span>
+	</div>
+	<div class="stat">
+		<span class="stat-label">Difficulty</span>
+		<span class="stat-value">$diff</span>
+	</div>
+	<div class="stat">
+		<span class="stat-label">All-time transactions</span>
+		<span class="stat-value">$txnr</span>
+	</div>
+</section>
+
+<section class="card fade">
+	<div class="card-head">
+		<h2>Recent blocks</h2>
+		<span class="muted">Refreshes every 30 seconds</span>
+	</div>
+	<div class="table-wrap">
+		<table class="listTable">
+			<tr class="tr">
+				<th>Height</th>
+				<th>Txs</th>
+				<th>Block hash</th>
+				<th>Age</th>
+			</tr>$blocks
+		</table>
+	</div>
+</section>
+
+<script>
+	setTimeout(function () { location.reload(); }, 30000);
+</script>
