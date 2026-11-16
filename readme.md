@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/smiley-mcsmiles/BlockScope/releases"><img src="https://img.shields.io/badge/version-0.1.0-blue.svg?style=flat-square" alt="Version 0.1.0"></a>
+  <a href="https://github.com/smiley-mcsmiles/BlockScope/releases"><img src="https://img.shields.io/badge/version-0.1.1-blue.svg?style=flat-square" alt="Version 0.1.1"></a>
   <a href="license.txt"><img src="https://img.shields.io/badge/license-BSD--3--Clause-green.svg?style=flat-square" alt="BSD 3-Clause License"></a>
   <a href="https://go.dev"><img src="https://img.shields.io/badge/go-1.18%2B-00ADD8.svg?style=flat-square&logo=go&logoColor=white" alt="Go 1.18+"></a>
   <a href="Dockerfile"><img src="https://img.shields.io/badge/docker-ready-2496ED.svg?style=flat-square&logo=docker&logoColor=white" alt="Docker ready"></a>
