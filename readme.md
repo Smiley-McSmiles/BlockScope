@@ -64,7 +64,14 @@ This produces a `blockscope` binary in the project directory.
 
 ## Docker
 
-The included `Dockerfile` builds BlockScope from this repository and runs it on port `31312`:
+Prebuilt images are published to GitHub Container Registry as `ghcr.io/smiley-mcsmiles/blockscope`. Pull the release version or `latest`, and run it on port `31312`:
+
+```
+docker run -p 31312:31312 ghcr.io/smiley-mcsmiles/blockscope:0.1.1 --daemon <node-host>:18081
+podman run -p 31312:31312 ghcr.io/smiley-mcsmiles/blockscope:0.1.1 --daemon <node-host>:18081
+```
+
+To build the image yourself from this repository's source with the included `Dockerfile`:
 
 ```
 docker build -t blockscope .
