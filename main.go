@@ -60,7 +60,7 @@ func main() {
  |____/|_|\___/ \___|_|\_\ |____/ \___\___/| .__/ \___|
                                            |_|
 
-                 The Trustless Block Explorer` + "\x1b[0m")
+                 Your node, Your ledger, No middlemen` + "\x1b[0m")
 	fmt.Println("\n\nStarting BlockScope v" + Version)
 
 	flag.StringVar(&listenAddress, "bind", "127.0.0.1:31312", "Address and port to bind.")
