@@ -35,7 +35,7 @@ BlockScope reads everything directly from your own `monerod` node, so you don't 
 
 **Mempool**
 
-![Mempool page](docs/screenshots/mempool.png)
+![Mempool page](docs/screenshots/mempool-v2.png)
 
 ## Features
 
