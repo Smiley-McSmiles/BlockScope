@@ -31,11 +31,11 @@ BlockScope reads everything directly from your own `monerod` node, so you don't 
 
 **Blocks**
 
-![Blocks page](docs/screenshots/blocks.png)
+![Blocks page](docs/screenshots/blocks-v2.png)
 
 **Mempool**
 
-![Mempool page](docs/screenshots/mempool-v2.png)
+![Mempool page](docs/screenshots/mempool-v3.png)
 
 ## Features
 
