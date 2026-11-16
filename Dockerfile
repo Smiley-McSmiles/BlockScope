@@ -22,6 +22,9 @@ RUN apk --no-cache add curl \
 
 COPY --from=build /out/blockscope /usr/local/bin/blockscope
 
+# License texts and third-party notices required for redistribution
+COPY license.txt THIRD_PARTY_LICENSES.md /usr/share/licenses/blockscope/
+
 USER blockscope
 WORKDIR /home/blockscope
 

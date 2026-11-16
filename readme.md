@@ -325,6 +325,8 @@ go test ./
 
 BlockScope is derived from [MoneroBlock](https://github.com/duggavo/MoneroBlock) and is distributed under the BSD 3-Clause License. The original copyright notice is preserved in [license.txt](license.txt), and changes and additions are copyright WOOSAH. BlockScope is not endorsed by the original authors of MoneroBlock.
 
+BlockScope also includes third-party components (BSD 3-Clause and Apache 2.0). Their license texts are in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
+
 ## Donate
 
 If BlockScope is useful to you, you can support its development:
