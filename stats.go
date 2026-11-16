@@ -12,6 +12,7 @@ type statsResponse struct {
 	Height          uint64  `json:"height"`
 	Difficulty      uint64  `json:"difficulty"`
 	Hashrate        uint64  `json:"hashrate"`
+	Target          uint64  `json:"target"`
 	TxCount         uint64  `json:"tx_count"`
 	FeeRate         uint64  `json:"fee_rate"`
 	LastBlockTime   int64   `json:"last_block_time"`
@@ -81,11 +82,17 @@ func fetchStats() (resp statsResponse, err error) {
 		return resp, err
 	}
 
+	target := info.Target
+	if target == 0 {
+		target = uint64(BlockTime)
+	}
+
 	avgTime, avgTxs, avgSize := sampleBlocks(RecentBlocks)
 	resp = statsResponse{
 		Height:          info.Height,
 		Difficulty:      info.Difficulty,
-		Hashrate:        info.Difficulty / uint64(BlockTime),
+		Hashrate:        info.Difficulty / target,
+		Target:          target,
 		TxCount:         info.TxCount,
 		FeeRate:         uint64(fee.Fee),
 		LastBlockTime:   last.BlockHeader.Timestamp,

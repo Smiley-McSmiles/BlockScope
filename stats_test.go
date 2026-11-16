@@ -29,7 +29,7 @@ func TestStatsFromDaemon(t *testing.T) {
 			body = map[string]interface{}{
 				"status": "OK", "height": 3807905, "difficulty": difficulty, "tx_count": 65633000,
 				"outgoing_connections_count": 8, "incoming_connections_count": 12,
-				"synchronized": true, "block_size_median": 60000, "block_size_limit": 120000, "version": "0.18.4.0",
+				"target": 120, "synchronized": true, "block_size_median": 60000, "block_size_limit": 120000, "version": "0.18.4.0",
 			}
 		case strings.HasSuffix(path, "/get_last_block_header"):
 			body = map[string]interface{}{
@@ -78,7 +78,7 @@ func TestStatsFromDaemon(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if s.Height != 3807905 || s.Difficulty != difficulty || s.Hashrate != difficulty/uint64(BlockTime) {
+	if s.Height != 3807905 || s.Difficulty != difficulty || s.Hashrate != difficulty/120 || s.Target != 120 {
 		t.Fatalf("height/difficulty/hashrate = %d %d %d", s.Height, s.Difficulty, s.Hashrate)
 	}
 	if s.FeeRate != 80000 || s.MempoolCount != 6 || s.MempoolFees != 307000 || s.MempoolBytes != 10770 {

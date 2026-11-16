@@ -23,7 +23,7 @@
 	<div class="stat">
 		<span class="stat-label">Network hashrate</span>
 		<span class="stat-value" id="s-hashrate">–</span>
-		<span class="stat-sub">difficulty ÷ 120 s</span>
+		<span class="stat-sub" id="s-hashrate-sub">difficulty ÷ block target</span>
 	</div>
 	<div class="stat">
 		<span class="stat-label">Mempool</span>
@@ -160,6 +160,7 @@
 			$('s-height-link').href = '/block?id=' + (d.height - 1);
 			$('s-last').textContent = ago(d.last_block_time);
 			$('s-hashrate').textContent = scaled(d.hashrate, ['H/s', 'kH/s', 'MH/s', 'GH/s', 'TH/s', 'PH/s']);
+			$('s-hashrate-sub').textContent = 'difficulty ÷ ' + d.target + ' s block target';
 			$('s-mempool').textContent = d.mempool_count.toLocaleString('en-US') + ' txs';
 			$('s-fee').textContent = d.fee_rate.toLocaleString('en-US');
 			$('s-difficulty').textContent = scaled(d.difficulty, ['', 'k', 'M', 'G', 'T', 'P']);
