@@ -32,7 +32,7 @@ package main
 import _ "embed"
 
 var Footer string = `
-	<footer class="footer">BlockScope · Your node, Your ledger, No middlemen · self-hosted · <a href="https://github.com/Smiley-McSmiles/BlockScope">Download &amp; updates on GitHub</a></footer>
+	<footer class="footer"><a href="https://github.com/Smiley-McSmiles/BlockScope">BlockScope</a> · Your node, Your ledger, No middlemen · self-hosted</footer>
 	</div>
 	<script>
 		(function () {
