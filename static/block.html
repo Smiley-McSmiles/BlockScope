@@ -3,10 +3,6 @@
 		<span class="eyebrow">Block</span>
 		<h1 class="page-title">Block <span class="mono accent" id="blocknum">$blocknum</span></h1>
 	</div>
-	<div class="pager">
-		<a class="btn-ghost" id="prev" href="#">← Previous</a>
-		<a class="btn-ghost" id="next" href="#">Next →</a>
-	</div>
 </section>
 
 <section class="card kv fade">
@@ -56,14 +52,3 @@
 		</table>
 	</div>
 </section>
-
-<script>
-	(function () {
-		var num = parseInt(document.getElementById('blocknum').textContent, 10);
-		document.getElementById('prev').href = '/block?id=' + (num - 1);
-		document.getElementById('next').href = '/block?id=' + (num + 1);
-		if (num <= 0) {
-			document.getElementById('prev').style.display = 'none';
-		}
-	})();
-</script>

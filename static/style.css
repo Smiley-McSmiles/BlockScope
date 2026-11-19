@@ -56,7 +56,6 @@ body {
 	line-height: 1.5;
 	color: var(--text);
 	background: radial-gradient(1100px 480px at 50% -180px, var(--glow), transparent 70%), var(--bg);
-	background-attachment: fixed;
 	transition: background-color 0.25s, color 0.25s;
 	-webkit-font-smoothing: antialiased;
 }
@@ -101,16 +100,11 @@ a:hover {
 }
 
 .mono,
-.monos,
-.monob {
+.monos {
 	font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
 }
 
 .monos {
-	font-size: 13.5px;
-}
-
-.monob {
 	font-size: 13.5px;
 }
 
@@ -548,6 +542,7 @@ a:hover {
 	text-align: left;
 	border-bottom: 1px solid var(--border);
 	white-space: nowrap;
+	font-variant-numeric: tabular-nums;
 }
 
 .listTable tr:last-child td {
@@ -602,6 +597,7 @@ a:hover {
 .v {
 	text-align: right;
 	font-weight: 600;
+	font-variant-numeric: tabular-nums;
 	word-break: break-all;
 	display: flex;
 	align-items: center;
@@ -639,9 +635,17 @@ a:hover {
 	color: var(--bad);
 }
 
-.pager {
-	display: flex;
-	gap: 8px;
+.badge.subtle {
+	background: var(--surface-2);
+	color: var(--muted);
+	border: 1px solid var(--border);
+	margin-left: 8px;
+	padding: 2px 8px;
+	font-size: 11px;
+}
+
+.badge.subtle::before {
+	display: none;
 }
 
 [hidden] {

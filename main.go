@@ -32,8 +32,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"html"
 	"math"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
@@ -42,7 +44,7 @@ import (
 	"github.com/cirocosta/go-monero/pkg/rpc/daemon"
 )
 
-const Version string = "0.1.2"
+const Version string = "0.1.3"
 
 // Monero network settings
 const BlockTime int = 120
@@ -88,64 +90,73 @@ func main() {
 	StartDaemonRpc()
 
 	http.HandleFunc("/style.css", func(res http.ResponseWriter, req *http.Request) {
-		res.Header().Set("Content-Type", "text/css")
+		res.Header().Set("Content-Type", "text/css; charset=utf-8")
+		res.Header().Set("Cache-Control", "public, max-age=3600")
 		res.Write(StyleSheetPage)
-
 	})
 	http.HandleFunc("/logo.svg", func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Set("Content-Type", "image/svg+xml")
+		res.Header().Set("Cache-Control", "public, max-age=3600")
 		res.Write(LogoSVG)
 	})
 	http.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
-		var blocksList string
-		for _, e := range RecentBlocks {
+		var blocksList strings.Builder
+		for i := len(RecentBlocks) - 1; i >= 0; i-- {
+			e := RecentBlocks[i]
 			CheckString(e.Hash)
-			blocksList = "<tr class=\"tr\"><td>" + strconv.FormatUint(e.Height, 10) + "</td><td>" + strconv.FormatUint(uint64(e.NumTxes), 10) + "</td><td><a class=\"monos\" href=\"/block?id=" + e.Hash + "\">" + e.Hash + "</a></td><td>" + FormatTimeAgo(time.Now().Unix()-e.Timestamp) + "</td></tr>" + blocksList
+			blocksList.WriteString(`<tr class="tr"><td>`)
+			blocksList.WriteString(strconv.FormatUint(e.Height, 10))
+			blocksList.WriteString(`</td><td>`)
+			blocksList.WriteString(strconv.FormatUint(uint64(e.NumTxes), 10))
+			blocksList.WriteString(`</td><td><a class="monos" href="/block?id=`)
+			blocksList.WriteString(e.Hash)
+			blocksList.WriteString(`">`)
+			blocksList.WriteString(e.Hash)
+			blocksList.WriteString(`</a></td><td>`)
+			blocksList.WriteString(FormatTimeAgo(time.Now().Unix() - e.Timestamp))
+			blocksList.WriteString(`</td></tr>`)
 		}
 
-		pageOut := strings.Replace(MainPage, "$blocks", blocksList, 1)
+		pageOut := strings.Replace(MainPage, "$blocks", blocksList.String(), 1)
 
-		res.Header().Set("Content-Type", "text/html")
+		res.Header().Set("Content-Type", "text/html; charset=utf-8")
 		res.Write([]byte(pageOut))
 	})
 	http.HandleFunc("/search", func(res http.ResponseWriter, req *http.Request) {
 		sParams := req.URL.Query()["q"]
-		if len(sParams) == 0 {
-			res.Write([]byte("ERROR: Missing search query"))
+		if len(sParams) == 0 || strings.TrimSpace(sParams[0]) == "" {
+			renderError(res, http.StatusBadRequest, "Missing search query", "Enter a block height, block hash, or transaction ID to search.")
 			return
 		}
-		searchParam := sParams[0]
+		searchParam := strings.TrimSpace(sParams[0])
 		searchType := GetSearchType(searchParam)
 
-		if !CheckString2(searchParam) {
-			res.Write([]byte("Transaction or block not found"))
+		if !CheckString2(searchParam) || searchType == 2 {
+			renderError(res, http.StatusNotFound, "Not found", "No matching transaction or block was found.")
 			return
 		}
 
-		if searchType == 2 {
-			res.Write([]byte("Transaction or block not found"))
-		} else if searchType == 0 {
-			res.Write(RedirectToUrl("/tx?id=" + searchParam))
+		if searchType == 0 {
+			http.Redirect(res, req, "/tx?id="+url.QueryEscape(searchParam), http.StatusFound)
 		} else if searchType == 1 {
-			res.Write(RedirectToUrl("/block?id=" + searchParam))
+			http.Redirect(res, req, "/block?id="+url.QueryEscape(searchParam), http.StatusFound)
 		}
-		res.Header().Set("Content-Type", "text/html")
 	})
 	http.HandleFunc("/tx", func(res http.ResponseWriter, req *http.Request) {
 		sParams := req.URL.Query()["id"]
-		if len(sParams) == 0 {
-			res.Write([]byte("ERROR: Missing transaction ID"))
+		if len(sParams) == 0 || sParams[0] == "" {
+			renderError(res, http.StatusBadRequest, "Missing transaction ID", "Provide a transaction ID via ?id=...")
 			return
 		}
 		txid := sParams[0]
 		if !CheckString2(txid) {
-			res.Write([]byte("Transaction not found"))
+			renderError(res, http.StatusNotFound, "Transaction not found", "The requested transaction could not be found.")
 			return
 		}
 
 		exists, txData := GetTransaction(txid)
 		if !exists {
-			res.Write([]byte("ERROR: Transaction not found"))
+			renderError(res, http.StatusNotFound, "Transaction not found", "The requested transaction could not be found.")
 			return
 		}
 
@@ -166,12 +177,13 @@ func main() {
 		formattedTime := time.Unix(txData.BlockTimestamp, 0).Format("2006-01-02 15:04")
 		o = strings.Replace(o, "$timestamp", formattedTime, 1)
 
+		res.Header().Set("Content-Type", "text/html; charset=utf-8")
 		res.Write([]byte(o))
 	})
 	http.HandleFunc("/block", func(res http.ResponseWriter, req *http.Request) {
 		sParams := req.URL.Query()["id"]
-		if len(sParams) == 0 {
-			res.Write([]byte("ERROR: Missing block ID"))
+		if len(sParams) == 0 || sParams[0] == "" {
+			renderError(res, http.StatusBadRequest, "Missing block ID", "Provide a block height or hash via ?id=...")
 			return
 		}
 		blockId := sParams[0]
@@ -186,18 +198,16 @@ func main() {
 			params = daemon.GetBlockRequestParameters{Hash: blockId}
 		}
 		if !CheckString2(blockId) {
-			res.Write([]byte("Block not found"))
+			renderError(res, http.StatusNotFound, "Block not found", "The requested block could not be found.")
 			return
 		}
 
-		var blockD *daemon.GetBlockResult
 		exists, blockD, blockBody := GetBlock(params)
-		blockData := blockD.BlockHeader
-
-		if !exists {
-			res.Write([]byte("ERROR: Block not found"))
+		if !exists || blockD == nil {
+			renderError(res, http.StatusNotFound, "Block not found", "The requested block could not be found.")
 			return
 		}
+		blockData := blockD.BlockHeader
 		CheckString(blockData.Hash)
 		CheckString(blockD.MinerTxHash)
 		transactions := append(blockBody.TxHashes, blockD.MinerTxHash)
@@ -210,16 +220,24 @@ func main() {
 		o = strings.Replace(o, "$reward", strconv.FormatFloat(float64(blockData.Reward)/math.Pow(10, 12), 'f', 5, 64), 1)
 		o = strings.Replace(o, "$minerTx", blockD.MinerTxHash, 2)
 
-		var txList string = ""
+		var txList strings.Builder
 		for i, e := range transactions {
 			CheckString(e)
-			txList += `<tr class="tr">
-			<td>` + strconv.FormatInt(int64(i+1), 10) + `</td>
-			<td><a href="/tx?id=` + e + `" class="monob">` + e + `</a></td>
-			</tr>`
+			txList.WriteString(`<tr class="tr"><td>`)
+			txList.WriteString(strconv.FormatInt(int64(i+1), 10))
+			txList.WriteString(`</td><td><a href="/tx?id=`)
+			txList.WriteString(e)
+			txList.WriteString(`" class="monos">`)
+			txList.WriteString(e)
+			txList.WriteString(`</a>`)
+			if e == blockD.MinerTxHash {
+				txList.WriteString(`<span class="badge subtle">Coinbase</span>`)
+			}
+			txList.WriteString(`</td></tr>`)
 		}
-		o = strings.Replace(o, "$txList", txList, 1)
+		o = strings.Replace(o, "$txList", txList.String(), 1)
 
+		res.Header().Set("Content-Type", "text/html; charset=utf-8")
 		res.Write([]byte(o))
 	})
 
@@ -228,7 +246,7 @@ func main() {
 	http.HandleFunc("/api/mempool", HandleMempool)
 	http.HandleFunc("/api/stats", HandleStats)
 	http.HandleFunc("/mempool", func(res http.ResponseWriter, req *http.Request) {
-		res.Header().Set("Content-Type", "text/html")
+		res.Header().Set("Content-Type", "text/html; charset=utf-8")
 		res.Write([]byte(MempoolPage))
 	})
 
@@ -251,8 +269,11 @@ func main() {
 
 }
 
-func RedirectToUrl(url string) []byte {
-	return []byte("<!DOCTYPE HTML><body><meta http-equiv=\"refresh\" content=\"0;url='" + url + "'\"/></body>")
+func renderError(res http.ResponseWriter, status int, title, message string) {
+	res.Header().Set("Content-Type", "text/html; charset=utf-8")
+	res.WriteHeader(status)
+	body := Header + `<section class="card fade"><div class="card-head"><h2>` + html.EscapeString(title) + `</h2></div><p class="muted">` + html.EscapeString(message) + `</p><p><a class="btn-ghost" href="/">← Back to home</a></p></section>` + Footer
+	res.Write([]byte(body))
 }
 
 func FormatTimeAgo(t int64) string {

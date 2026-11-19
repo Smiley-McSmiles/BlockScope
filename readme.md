@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/smiley-mcsmiles/BlockScope/releases"><img src="https://img.shields.io/badge/version-0.1.2-blue.svg?style=flat-square" alt="Version 0.1.2"></a>
+  <a href="https://github.com/smiley-mcsmiles/BlockScope/releases"><img src="https://img.shields.io/badge/version-0.1.3-blue.svg?style=flat-square" alt="Version 0.1.3"></a>
   <a href="license.txt"><img src="https://img.shields.io/badge/license-BSD--3--Clause-green.svg?style=flat-square" alt="BSD 3-Clause License"></a>
   <a href="https://go.dev"><img src="https://img.shields.io/badge/go-1.18%2B-00ADD8.svg?style=flat-square&logo=go&logoColor=white" alt="Go 1.18+"></a>
   <a href="Dockerfile"><img src="https://img.shields.io/badge/docker-ready-2496ED.svg?style=flat-square&logo=docker&logoColor=white" alt="Docker ready"></a>
@@ -40,7 +40,7 @@ BlockScope reads everything directly from your own `monerod` node, so you don't 
 ## Features
 
 - **Network overview:** block height, last block age, hashrate, difficulty, mempool, fee rate and the most recent blocks. A "More stats" arrow reveals average block time, transactions and block size, the last block reward, mempool size and fees, peer counts and node status.
-- **Block pages:** block details, reward, size and every transaction in the block, with previous and next block navigation.
+- **Block pages:** block details, reward, size and every transaction in the block.
 - **Transaction pages:** confirmation status, block height, timestamp, size and double-spend detection.
 - **Mempool:** unconfirmed transactions sorted by fee rate, with totals and a live search by transaction ID.
 - **Decode outputs:** check which outputs in a transaction belong to a Monero address or subaddress and viewkey, and decode their amounts for RingCT transactions.
@@ -67,8 +67,8 @@ This produces a `blockscope` binary in the project directory.
 Prebuilt images are published to GitHub Container Registry as `ghcr.io/smiley-mcsmiles/blockscope`. Pull the release version or `latest`, and run it on port `31312`:
 
 ```
-docker run -p 31312:31312 ghcr.io/smiley-mcsmiles/blockscope:0.1.2 --daemon <node-host>:18081
-podman run -p 31312:31312 ghcr.io/smiley-mcsmiles/blockscope:0.1.2 --daemon <node-host>:18081
+docker run -p 31312:31312 ghcr.io/smiley-mcsmiles/blockscope:0.1.3 --daemon <node-host>:18081
+podman run -p 31312:31312 ghcr.io/smiley-mcsmiles/blockscope:0.1.3 --daemon <node-host>:18081
 ```
 
 To build the image yourself from this repository's source with the included `Dockerfile`:
