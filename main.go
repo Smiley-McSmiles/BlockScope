@@ -44,7 +44,7 @@ import (
 	"github.com/cirocosta/go-monero/pkg/rpc/daemon"
 )
 
-const Version string = "0.1.3"
+const Version string = "0.1.4"
 
 // Monero network settings
 const BlockTime int = 120
